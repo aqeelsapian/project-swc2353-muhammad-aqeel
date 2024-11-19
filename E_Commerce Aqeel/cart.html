@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping Cart</title>
+  <link rel="stylesheet" href="cart.css" />
+  <link rel="icon" type="image/png" href="img/logo 64px.png" />
+ </head>
+ <body>
+  <header>
+   <div class="header-container">
+    <!-- Logo Section -->
+    <div class="logo">
+     <a href="index.html">
+      <img src="img/logo 64px.png" alt="Clothing Store Logo" width="100" />
+      <!-- Adjust width as needed -->
+     </a>
+    </div>
+
+    <!-- Navigation Section -->
+    <nav class="top-nav">
+     <a href="index.html">Home</a>
+     <a href="product.html">Products</a>
+     <a href="cart.html">Cart</a>
+     <a href="checkout.html">Checkout</a>
+     <a href="inbox.html">Inbox</a>
+    </nav>
+
+    <!-- Search Bar Section -->
+    <div class="search-bar">
+     <input type="text" placeholder="Search items..." id="search-input" />
+     <button id="search-btn">Search</button>
+    </div>
+   </div>
+  </header>
+
+  <!-- Cart Section -->
+  <main>
+   <section class="cart">
+    <h2>Shopping Cart (<span id="cart-item-count">0</span>)</h2>
+
+    <div id="cart-items-container"></div>
+
+    <div class="total-section">
+     <p class="total-label">Total: <span class="total-price">RM0.00</span></p>
+     <button class="checkout-btn" id="checkout-btn">
+      Checkout(<span id="cart-item-count">0</span>)
+     </button>
+    </div>
+   </section>
+  </main>
+
+  <script>
+   // Function to update cart items and total
+   function updateCart() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartItemCount = document.getElementById("cart-item-count");
+    const cartItemsContainer = document.getElementById("cart-items-container");
+    const totalPriceElement = document.querySelector(".total-price");
+
+    cartItemsContainer.innerHTML = ""; // Clear previous cart items
+
+    let total = 0;
+    cart.forEach((item, index) => {
+     const itemElement = document.createElement("div");
+     itemElement.classList.add("cart-item");
+     itemElement.setAttribute(
+      "data-item-id",
+      `${item.name}-${item.size}-${item.color}`
+     );
+     itemElement.innerHTML = `
+            <div class="product-info">
+                <img src="${item.img}" alt="${
+      item.name
+     }" class="cart-product-image">
+                <div class="product-details">
+                    <h3>${item.name}</h3>
+                    <label>Size:</label>
+                    <select class="size" data-index="${index}">
+                        <option value="S" ${
+                         item.size === "S" ? "selected" : ""
+                        }>Small</option>
+                        <option value="M" ${
+                         item.size === "M" ? "selected" : ""
+                        }>Medium</option>
+                        <option value="L" ${
+                         item.size === "L" ? "selected" : ""
+                        }>Large</option>
+                    </select>
+                    <label>Color:</label>
+                    <select class="color" data-index="${index}">
+                        <option value="Blue" ${
+                         item.color === "Blue" ? "selected" : ""
+                        }>Blue</option>
+                        <option value="Black" ${
+                         item.color === "Black" ? "selected" : ""
+                        }>Black</option>
+                        <option value="Grey" ${
+                         item.color === "Grey" ? "selected" : ""
+                        }>Grey</option>
+                    </select>
+                    <p class="price">RM${(item.price * item.quantity).toFixed(
+                     2
+                    )}</p>
+                </div>
+            </div>
+            <div class="cart-item-actions">
+                <button class="increase" data-index="${index}">+</button>
+                <span class="quantity">${item.quantity}</span>
+                <button class="decrease" data-index="${index}">-</button>
+                <button class="remove" data-index="${index}">Remove</button>
+            </div>
+        `;
+
+     total += item.price * item.quantity;
+     cartItemsContainer.appendChild(itemElement);
+
+     // Event listeners for quantity update, size/color change, and item removal
+     itemElement
+      .querySelector(".increase")
+      .addEventListener("click", () => updateItemQuantity(index, 1));
+     itemElement
+      .querySelector(".decrease")
+      .addEventListener("click", () => updateItemQuantity(index, -1));
+     itemElement
+      .querySelector(".remove")
+      .addEventListener("click", () => removeItem(index));
+
+     itemElement
+      .querySelector(".size")
+      .addEventListener("change", (event) =>
+       updateItemSizeAndColor(index, event)
+      );
+     itemElement
+      .querySelector(".color")
+      .addEventListener("change", (event) =>
+       updateItemSizeAndColor(index, event)
+      );
+    });
+
+    totalPriceElement.textContent = `RM${total.toFixed(2)}`;
+    cartItemCount.textContent = cart.reduce(
+     (total, item) => total + item.quantity,
+     0
+    ); // Update item count
+
+    // Update the checkout button count as well
+    document.querySelector(
+     ".checkout-btn"
+    ).textContent = `Checkout (${cartItemCount.textContent})`;
+   }
+
+   // Function to update item size and color
+   function updateItemSizeAndColor(index, event) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const updatedItem = cart[index];
+    const sizeSelect = event.target
+     .closest(".cart-item")
+     .querySelector(".size");
+    const colorSelect = event.target
+     .closest(".cart-item")
+     .querySelector(".color");
+
+    updatedItem.size = sizeSelect.value;
+    updatedItem.color = colorSelect.value;
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCart();
+   }
+
+   // Function to update item quantity
+   function updateItemQuantity(index, delta) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart[index].quantity += delta;
+
+    if (cart[index].quantity <= 0) {
+     removeItem(index);
+    } else {
+     localStorage.setItem("cart", JSON.stringify(cart));
+     updateCart();
+    }
+   }
+
+   // Function to remove item
+   function removeItem(index) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.splice(index, 1); // Remove item by index
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCart();
+   }
+
+   // Initial cart setup when the page loads
+   window.onload = updateCart;
+
+   // Event listener for the checkout button
+   document
+    .getElementById("checkout-btn")
+    .addEventListener("click", function () {
+     const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+     if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+     }
+
+     // Store the cart data in localStorage instead of URL parameters
+     localStorage.setItem("checkoutCart", JSON.stringify(cart));
+
+     // Simply redirect to checkout page without parameters
+     window.location.href = "checkout.html";
+    });
+
+   // Add this new function to merge duplicate items
+   function addToCart(newItem) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // Check if item with same name, size, and color exists
+    const existingItemIndex = cart.findIndex(
+     (item) =>
+      item.name === newItem.name &&
+      item.size === newItem.size &&
+      item.color === newItem.color
+    );
+
+    if (existingItemIndex !== -1) {
+     // If item exists, increase quantity
+     cart[existingItemIndex].quantity += newItem.quantity;
+    } else {
+     // If item doesn't exist, add new item
+     cart.push(newItem);
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCart();
+   }
+
+   // Function to get cart data from localStorage
+   function getCartFromLocalStorage() {
+    const cartData = localStorage.getItem("cart");
+    if (!cartData) {
+     return [];
+    }
+    try {
+     return JSON.parse(cartData);
+    } catch (error) {
+     console.error("Error parsing cart data:", error);
+     return [];
+    }
+   }
+
+   // Function to display cart items in the order summary
+   function displayOrderSummary() {
+    const cartItems = getCartFromLocalStorage();
+    const orderItemsContainer = document.getElementById(
+     "order-items-container"
+    );
+    const totalPriceElement = document.getElementById("total-price");
+
+    // Clear existing items
+    orderItemsContainer.innerHTML = "";
+
+    if (cartItems.length === 0) {
+     orderItemsContainer.innerHTML = "<p>No items in cart</p>";
+     totalPriceElement.textContent = "0.00";
+     return;
+    }
+
+    let total = 0;
+
+    // Display each item in the order summary
+    cartItems.forEach((item) => {
+     const itemElement = document.createElement("div");
+     itemElement.classList.add("order-item");
+
+     // Ensure we're getting the image path correctly
+     const imageSrc = item.image || item.img || "img/placeholder.png";
+
+     itemElement.innerHTML = `
+        <img src="${imageSrc}" alt="${
+      item.name
+     }" style="width: 50px; height: 50px;"
+        onerror="this.src='img/placeholder.png'; this.onerror=null;">
+        <div class="item-details">
+            <p class="item-name">${item.name}</p>
+            <p class="item-price">RM${item.price.toFixed(2)} × ${
+      item.quantity
+     }</p>
+            <p class="item-subtotal">Subtotal: RM${(
+             item.price * item.quantity
+            ).toFixed(2)}</p>
+        </div>
+    `;
+     orderItemsContainer.appendChild(itemElement);
+
+     // Add to total price
+     total += item.price * item.quantity;
+    });
+
+    // Update total price in the order summary
+    totalPriceElement.textContent = total.toFixed(2);
+   }
+
+   // Function to handle form submission
+   function handleFormSubmit(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    const paymentMethod = document.getElementById("payment").value;
+    const cartItems = getCartFromLocalStorage();
+
+    // Validate if cart is not empty
+    if (cartItems.length === 0) {
+     alert("Your cart is empty. Please add items before checking out.");
+     return;
+    }
+
+    const total = cartItems.reduce(
+     (sum, item) => sum + item.price * item.quantity,
+     0
+    );
+
+    // Create message for inbox with items array
+    const inboxMessage = {
+     orderId: Math.floor(Math.random() * 1000000)
+      .toString()
+      .padStart(6, "0"),
+     timestamp: new Date().toISOString(),
+     name,
+     address,
+     paymentMethod,
+     total: total.toFixed(2),
+     items: cartItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      img: item.image || item.img || "img/placeholder.png",
+     })),
+     status: "Pending",
+     estimatedDelivery: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+     ).toLocaleDateString(),
+    };
+
+    // Get existing messages or initialize empty array
+    const existingMessages = JSON.parse(
+     localStorage.getItem("checkoutMessages") || "[]"
+    );
+    existingMessages.push(inboxMessage);
+
+    // Save messages to localStorage
+    localStorage.setItem("checkoutMessages", JSON.stringify(existingMessages));
+
+    // Clear the cart after successful order
+    localStorage.removeItem("cart");
+
+    alert(
+     `Order #${inboxMessage.orderId} placed successfully! Check your inbox for order details.`
+    );
+
+    // Redirect to inbox page
+    window.location.href = "inbox.html";
+   }
+
+   // Event listener for form submission
+   document
+    .getElementById("checkout-form")
+    .addEventListener("submit", handleFormSubmit);
+
+   // Initialize the order summary display when the page loads
+   document.addEventListener("DOMContentLoaded", function () {
+    displayOrderSummary();
+   });
+
+   // Retrieve cart data from localStorage
+   function getCartData() {
+    const checkoutCart = JSON.parse(localStorage.getItem("checkoutCart")) || [];
+
+    // Process the cart items
+    checkoutCart.forEach((item) => {
+     // Now you have access to all item properties including item.img
+     console.log("Item image URL:", item.img);
+     // Add your code to display the items
+    });
+
+    // Optional: Clear the checkout cart data after retrieving it
+    // localStorage.removeItem("checkoutCart");
+   }
+
+   // Call this function when the checkout page loads
+   window.onload = getCartData;
+
+   // Function to perform search
+   function searchItems(searchTerm) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartItemsContainer = document.getElementById("cart-items-container");
+    const items = cartItemsContainer.getElementsByClassName("cart-item");
+
+    searchTerm = searchTerm.toLowerCase();
+
+    for (let item of items) {
+     const itemName = item.querySelector("h3").textContent.toLowerCase();
+     const itemSize = item.querySelector(".size").value.toLowerCase();
+     const itemColor = item.querySelector(".color").value.toLowerCase();
+
+     // Check if any of the item properties contain the search term
+     if (
+      itemName.includes(searchTerm) ||
+      itemSize.includes(searchTerm) ||
+      itemColor.includes(searchTerm)
+     ) {
+      item.style.display = ""; // Show matching items
+     } else {
+      item.style.display = "none"; // Hide non-matching items
+     }
+    }
+   }
+
+   // Add event listeners for search
+   document
+    .getElementById("search-input")
+    .addEventListener("input", function (e) {
+     searchItems(e.target.value);
+    });
+
+   document.getElementById("search-btn").addEventListener("click", function () {
+    const searchTerm = document.getElementById("search-input").value;
+    searchItems(searchTerm);
+   });
+  </script>
+ </body>
+</html>

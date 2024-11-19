@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You - Your Order</title>
+  <link rel="stylesheet" href="confirmation.css" />
+ </head>
+ <body>
+  <header>
+   <h1>Thank You for Your Order!</h1>
+   <nav>
+    <a href="index.html">Home</a>
+    <a href="product.html">Products</a>
+    <a href="cart.html">Cart</a>
+    <a href="checkout.html">Checkout</a>
+   </nav>
+  </header>
+
+  <main>
+   <section id="order-confirmation">
+    <h2>Your Order Has Been Placed!</h2>
+    <p>
+     Thank you for shopping with us, <span id="customer-name">Guest</span>. You
+     will receive an update notification in your inbox shortly.
+    </p>
+    <div class="order-summary">
+     <h3>Order Details:</h3>
+     <div class="customer-info">
+      <p>Order ID: <span id="order-id"></span></p>
+      <p>Email: <span id="customer-email"></span></p>
+     </div>
+     <div class="order-summary">
+      <h3>Order Summary:</h3>
+      <ul id="order-items">
+       <!-- Order items will be dynamically inserted here -->
+      </ul>
+      <div class="order-totals">
+       <p>Subtotal: <span id="subtotal">RM 0.00</span></p>
+       <p>Shipping: <span id="shipping">RM 0.00</span></p>
+       <p class="total">Total: <span id="order-total">RM 0.00</span></p>
+      </div>
+     </div>
+    </div>
+    <a href="inbox.html" class="btn">View Your Order</a>
+   </section>
+  </main>
+
+  <footer>
+   <p>&copy; 2024 My E-commerce Website. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="confirmation.js"></script>
+ </body>
+</html>

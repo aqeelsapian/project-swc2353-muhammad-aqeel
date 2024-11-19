@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout</title>
+  <link rel="stylesheet" href="checkout.css" />
+  <link rel="icon" type="image/png" href="img/logo 64px.png" />
+ </head>
+ <body>
+  <header>
+   <div class="header-container">
+    <!-- Logo Section -->
+    <div class="logo">
+     <a href="index.html">
+      <img src="img/logo 64px.png" alt="Clothing Store Logo" width="100" />
+      <!-- Adjust width as needed -->
+     </a>
+    </div>
+
+    <!-- Navigation Section -->
+    <nav class="top-nav">
+     <a href="index.html">Home</a>
+     <a href="product.html">Products</a>
+     <a href="cart.html">Cart</a>
+     <a href="checkout.html">Checkout</a>
+     <a href="inbox.html">Inbox</a>
+    </nav>
+
+    <!-- Search Bar Section -->
+    <div class="search-bar">
+     <input type="text" placeholder="Search..." id="search-input" />
+     <button id="search-btn">Search</button>
+    </div>
+   </div>
+  </header>
+  <main>
+   <section id="order-summary">
+    <h2>Order Summary</h2>
+    <div id="order-items-container"></div>
+    <div class="summary-total">
+     <p><strong>Total:</strong> RM<span id="total-price">0.00</span></p>
+    </div>
+   </section>
+
+   <section id="checkout-form">
+    <h2>Billing Information</h2>
+    <form id="checkout-form" method="post">
+     <label for="name">Name:</label>
+     <input type="text" id="name" name="name" required />
+
+     <label for="address">Address:</label>
+     <input type="text" id="address" name="address" required />
+
+     <label for="payment">Payment Method:</label>
+     <select id="payment" name="payment">
+      <option value="touch-n-go">Touch 'n Go eWallet</option>
+      <option value="credit">Credit Card</option>
+      <option value="online-banking">Online Banking</option>
+     </select>
+     <button type="submit" id="place-order-btn">Place Order</button>
+    </form>
+   </section>
+  </main>
+  <script>
+   // Function to get cart data from localStorage
+   function getCartFromLocalStorage() {
+    const cartData = localStorage.getItem("cart");
+    if (!cartData) {
+     return [];
+    }
+    try {
+     return JSON.parse(cartData);
+    } catch (error) {
+     console.error("Error parsing cart data:", error);
+     return [];
+    }
+   }
+
+   // Function to display cart items in the order summary
+   function displayOrderSummary() {
+    const cartItems = getCartFromLocalStorage();
+    const orderItemsContainer = document.getElementById(
+     "order-items-container"
+    );
+    const totalPriceElement = document.getElementById("total-price");
+
+    // Clear existing items
+    orderItemsContainer.innerHTML = "";
+
+    if (cartItems.length === 0) {
+     orderItemsContainer.innerHTML = "<p>No items in cart</p>";
+     totalPriceElement.textContent = "0.00";
+     return;
+    }
+
+    let total = 0;
+
+    // Display each item in the order summary
+    cartItems.forEach((item) => {
+     const itemElement = document.createElement("div");
+     itemElement.classList.add("order-item");
+
+     // Ensure we're getting the image path correctly
+     const imageSrc =
+      item.image ||
+      item.img ||
+      `img/products/${item.name.toLowerCase().replace(/\s+/g, "-")}.jpg` ||
+      "img/placeholder.png";
+
+     itemElement.innerHTML = `
+        <img src="${imageSrc}" alt="${
+      item.name
+     }" style="width: 50px; height: 50px;"
+        onerror="this.src='img/placeholder.png'; this.onerror=null;">
+        <div class="item-details">
+            <p class="item-name">${item.name}</p>
+            <p class="item-price">RM${item.price.toFixed(2)} × ${
+      item.quantity
+     }</p>
+            <p class="item-subtotal">Subtotal: RM${(
+             item.price * item.quantity
+            ).toFixed(2)}</p>
+        </div>
+    `;
+     orderItemsContainer.appendChild(itemElement);
+
+     // Add to total price
+     total += item.price * item.quantity;
+    });
+
+    // Update total price in the order summary
+    totalPriceElement.textContent = total.toFixed(2);
+   }
+
+   // Function to handle form submission
+   function handleFormSubmit(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    const paymentMethod = document.getElementById("payment").value;
+    const cartItems = getCartFromLocalStorage();
+
+    // Validate if cart is not empty
+    if (cartItems.length === 0) {
+     alert("Your cart is empty. Please add items before checking out.");
+     return;
+    }
+
+    const total = cartItems.reduce(
+     (sum, item) => sum + item.price * item.quantity,
+     0
+    );
+
+    // Create message for inbox with items array
+    const inboxMessage = {
+     orderId: Math.floor(Math.random() * 1000000)
+      .toString()
+      .padStart(6, "0"),
+     timestamp: new Date().toISOString(),
+     name,
+     address,
+     paymentMethod,
+     total: total.toFixed(2),
+     items: cartItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      img:
+       item.image ||
+       item.img ||
+       `img/products/${item.name.toLowerCase().replace(/\s+/g, "-")}.jpg` ||
+       "img/placeholder.png",
+     })),
+     status: "Pending",
+     estimatedDelivery: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+     ).toLocaleDateString(),
+    };
+
+    // Get existing messages or initialize empty array
+    const existingMessages = JSON.parse(
+     localStorage.getItem("checkoutMessages") || "[]"
+    );
+    existingMessages.push(inboxMessage);
+
+    // Save messages to localStorage
+    localStorage.setItem("checkoutMessages", JSON.stringify(existingMessages));
+
+    // Clear the cart after successful order
+    localStorage.removeItem("cart");
+
+    localStorage.setItem("lastOrderId", inboxMessage.orderId); // Store order ID for confirmation page
+    window.location.href = "confirmation.html";
+   }
+
+   // Event listener for form submission
+   document
+    .getElementById("checkout-form")
+    .addEventListener("submit", handleFormSubmit);
+
+   // Initialize the order summary display when the page loads
+   document.addEventListener("DOMContentLoaded", function () {
+    displayOrderSummary();
+   });
+  </script>
+ </body>
+</html>
